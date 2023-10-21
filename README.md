@@ -1,0 +1,2 @@
+# WSI
+Artiffical Intelligence algorithms
