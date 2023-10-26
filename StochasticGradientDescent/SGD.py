@@ -2,6 +2,9 @@ import random
 import numpy as np
 from typing import Callable
 import matplotlib.pyplot as plt
+import logging
+import datetime
+import os
 
 
 class SGD:
@@ -21,6 +24,13 @@ class SGD:
             delta: value of step - step size (optional)
 
         """
+        self._logger = logging.getLogger(__name__)
+        local_vars = locals()
+        self._logger.info("Start the program. Log arguments")
+        for var_name, var_value in local_vars.items():
+            if var_name != 'self':
+                self._logger.info(f"{var_name}: {var_value}")
+
         self._x = x
         self._y = y
         self._gradient = gradient_function
@@ -36,11 +46,13 @@ class SGD:
         Returns:
             Randomly chosen starting points for the algorithm - randomly chosen starting points
         """
+        self._logger.info("Choose starting points")
         random.seed(self._seed)
         random_indexes = random.choices(range(0, len(self._x) - 1), k=2)
-        random_element_x = self._x[random_indexes[0]]
-        random_element_y = self._y[random_indexes[1]]
-        return np.array([random_element_x, random_element_y]).reshape((2, 1))
+        x = self._x[random_indexes[0]]
+        y = self._y[random_indexes[1]]
+        self._logger.info(f"Starting points: ({x},{y})")
+        return np.array([x, y]).reshape((2, 1))
 
     def fit_point(self):
         """
@@ -55,8 +67,10 @@ class SGD:
             diff = self._lr * self._gradient(curr_point)
             if np.all(np.abs(diff) <= self._delta):
                 break
-            curr_point -= diff
+            curr_point += diff
             current_epoch += 1
+        self._logger.info(f"Number of iterations: {current_epoch}")
+        self._logger.info(f"Calculated points : {curr_point[0]},{curr_point[1]}")
         return curr_point
 
 
@@ -105,7 +119,6 @@ def display_3d_function(x: np.array, y: np.array, function: Callable, result_poi
     """
     x_arr, y_arr = np.meshgrid(x, y)
     z_arr = function(x_arr, y_arr)
-    plt.rc('pgf', texsystem='pdflatex')
     ax = plt.subplot(projection="3d", computed_zorder=False)
     ax.plot_surface(x_arr, y_arr, z_arr, cmap="viridis", zorder=0)
     if result_point is not None:
@@ -113,11 +126,28 @@ def display_3d_function(x: np.array, y: np.array, function: Callable, result_poi
     plt.show()
 
 
+def set_logging(folder_name: str) -> None:
+    """
+    Set logger configuration
+
+    Args:
+        folder_name: folder with log files
+
+
+    """
+    os.makedirs(folder_name, exist_ok=True)
+    logging.basicConfig(filename=f"{folder_name}/app_{datetime.datetime.now():%Y-%m-%d_%H-%M-%S}.log",
+                        level=logging.INFO)
+
+
 def main():
-    x = np.arange(-2, 4, 0.01)
-    y = np.arange(-2, 4, 0.01)
+    x = np.arange(-3, 3, 0.01)
+    y = np.arange(-3, 3, 0.01)
     lr = 0.05
-    sgd = SGD(x=x, y=y, gradient_function=gradient, lr=lr, seed=None, max_epochs=100000, delta=0.000001)
+    max_epochs = 10000
+    delta = 0.001
+    set_logging("report")
+    sgd = SGD(x=x, y=y, gradient_function=gradient, lr=lr, seed=28, max_epochs=max_epochs, delta=delta)
     result_point = sgd.fit_point()
     display_3d_function(x, y, func, result_point)
 
