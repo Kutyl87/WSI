@@ -5,15 +5,32 @@ import matplotlib.pyplot as plt
 import datetime
 import os
 from typing import Callable
+from math import floor
+
 
 class EvolutionStrategy:
-    def __init__(self, mi, lamb, starting_point=None):
+    def __init__(self, x, y, func, mi, lamb, max_iter, seed=None):
+        self._x = x
+        self._y = y
         self._mi = mi
         self._lamb = lamb
+        self._seed = seed if seed else random.randint(10, 101)
         self._logger = logging.getLogger(__name__)
-        self._starting_point = starting_point
+        self._func = func
+        self._offset = 0.005
+        self._max_iter = max_iter
+        self._paired_population = None
+        self._new_generation = None
 
-    def set_starting_points(self):
+    def fitness(self):
+        x = self._population[:, 0]
+        y = self._population[:, 1]
+        function_value = self._func(x, y)
+        standarized_function_value = (function_value - np.min(function_value) + self._offset) / np.sum(
+            function_value - np.min(function_value) + self._offset)
+        return standarized_function_value
+
+    def set_starting_points(self, mi):
         """
         Selects random starting points for the algorithm.
 
@@ -22,11 +39,45 @@ class EvolutionStrategy:
         """
         self._logger.info("Choose starting points")
         random.seed(self._seed)
-        random_indexes = random.choices(range(0, len(self._x) - 1), k=2)
-        x = self._x[random_indexes[0]]
-        y = self._y[random_indexes[1]]
-        self._logger.info(f"Starting points: ({x},{y})")
-        return np.array([x, y]).reshape((2, 1))
+        random_indexes = np.random.choice(range(0, len(self._x) - 1), size=(2, mi))
+        x = self._x[random_indexes[0][:]].reshape(mi, 1)
+        y = self._y[random_indexes[1][:]].reshape(mi, 1)
+        starting_points = np.concatenate((x, y), axis=1)
+        self._logger.info(f"Starting points: ({starting_points})")
+        self._population = starting_points
+        # return np.array([x, y]).reshape((2, 1))
+
+
+    def extend_population(self):
+        self._paired_population = np.repeat(self._paired_population, self._lamb, axis= 0)
+
+    def crossover(self):
+        a = np.repeat(np.random.normal(0, 1, size=(floor(self._mi/2) * self._lamb, 1)), 2, axis=1)
+        # print(a.shape)
+        self.extend_population()
+        # print(self._population)
+        # print(self._paired_population)
+        print(self._paired_population.shape)
+        self._new_generation = self._paired_population[:,0,:] * a + self._paired_population[:,1,:] * (1-a)
+        print(self._new_generation.shape)
+        # print(a.shape)
+
+    def selection(self, probabilities):
+        self._paired_population = self._population[
+            np.random.choice(self._population.shape[0], replace=False, p=probabilities,
+                             size=(floor(len(self._population) / 2), 2))]
+
+
+    def mutate(self):
+        mut_prob  = 0.1
+        mutated_individuals = np.repeat(np.random.random(size = (self._new_generation.shape[0],1)),2,axis=1)
+        gaussian_noise = np.random.normal(0, 1, size=(floor(self._mi/2) * self._lamb, 2))
+        self._mutated_generation = self._new_generation + (mutated_individuals < mut_prob) * gaussian_noise
+    def evolution(self):
+        i = 0
+
+        while i < self._max_iter:
+            pass
 
 
 def func(x: np.array, y: np.array) -> np.dtype:
@@ -82,9 +133,18 @@ def set_logging(folder_name: str) -> None:
 def main():
     x = np.arange(-3, 3, 0.01)
     y = np.arange(-3, 3, 0.01)
+    seed = 28
     set_logging("report")
-    evolution = EvolutionStrategy(mi =1, lamb =1)
-    display_3d_function(x, y, func)
+    evolution = EvolutionStrategy(mi=120, lamb=3, x=x, y=y, seed=28, func=func, max_iter=1000)
+    population = evolution.set_starting_points(120)
+    fit = evolution.fitness()
+    # evolution.mutate()
+    evolution.selection(fit)
+    evolution.crossover()
+    evolution.mutate()
+    # print(sel)
+    # print(fit)
+    # display_3d_function(x, y, func)
 
 
 if __name__ == "__main__":
