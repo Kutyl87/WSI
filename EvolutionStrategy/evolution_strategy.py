@@ -6,6 +6,7 @@ import datetime
 import os
 from typing import Callable
 
+
 class EvolutionStrategy:
     def __init__(self, x, y, funct, mi, lamb, max_iter, param, seed=None):
         """
@@ -64,16 +65,6 @@ class EvolutionStrategy:
         self._logger.info(f"Starting points: ({starting_points})")
         return starting_points
 
-    # def extend_population(self, parents):
-    #     """
-    #     Extends the population by repeating parents.
-    #     Args:
-    #         parents - parent population
-    #     Returns:
-    #         Extended population
-    #     """
-    #     return np.repeat(parents, self._lamb, axis=0)
-
     def crossover(self, parents):
         """
         Performs crossover operation (not fully implemented).
@@ -124,7 +115,7 @@ class EvolutionStrategy:
         Returns:
             New population and their normalized fitness values
         """
-        sorted_indexes = np.argsort(whole_population_rate)[::self._param - (1-self._param)][:self._mi]
+        sorted_indexes = np.argsort(whole_population_rate)[::self._param - (1 - self._param)][:self._mi]
         new_population = whole_population[sorted_indexes]
         new_population_rate = whole_population_rate[sorted_indexes]
         return new_population, new_population_rate * 1 / sum(new_population_rate)
