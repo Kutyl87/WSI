@@ -9,7 +9,7 @@ from math import floor
 
 
 class EvolutionStrategy:
-    def __init__(self, x, y, funct, mi, lamb, max_iter, seed=None):
+    def __init__(self, x, y, funct, mi, lamb, max_iter, param, seed=None):
         """
         Initializes an EvolutionStrategy object with specified parameters.
         Args:
@@ -19,6 +19,7 @@ class EvolutionStrategy:
             mi - parent population size
             lamb - offspring population size
             max_iter - maximum number of iterations
+            param - True if minimum is sought else False
             seed - random number generator seed (optional)
         """
         self._x = x
@@ -30,8 +31,7 @@ class EvolutionStrategy:
         self._func = funct
         self._offset = 0.005
         self._max_iter = max_iter
-        self._paired_population = None
-        self._new_generation = None
+        self._param = param
 
     def fitness(self, population):
         """
@@ -122,7 +122,7 @@ class EvolutionStrategy:
         Returns:
             New population and their normalized fitness values
         """
-        sorted_indexes = np.argsort(whole_population_rate)[::True - (1-True)][:self._mi]
+        sorted_indexes = np.argsort(whole_population_rate)[::self._param - (1-self._param)][:self._mi]
         new_population = whole_population[sorted_indexes]
         new_population_rate = whole_population_rate[sorted_indexes]
         return new_population, new_population_rate * 1 / sum(new_population_rate)
@@ -144,7 +144,7 @@ class EvolutionStrategy:
             whole_population_rate = self.fitness(whole_population)
             population, population_rate = self.get_new_population(whole_population, whole_population_rate)
             i += 1
-        return population[1, :]
+        return population[0, :]
 
 
 def func(x: np.array, y: np.array) -> np.dtype:
@@ -169,7 +169,7 @@ def display_3d_function(x: np.array, y: np.array, function: Callable, result_poi
         x: x-values array - array with x values
         y: y-values array - array with y values
         function: function to be displayed - function to be displayed on the plot
-        result_point: point calculated with the SGD algorithm - point calculated with the SGD algorithm (optional)
+        result_point: point calculated with the Evolutionary algorithm - point calculated with the SGD algorithm (optional)
 
     Performs:
         Display function plot with the calculated point - Displays the function plot with the calculated point
@@ -201,7 +201,7 @@ def main():
     x = np.arange(-7, 7, 0.01)
     y = np.arange(-7, 7, 0.01)
     set_logging("report")
-    evolution = EvolutionStrategy(mi=3, lamb=120, x=x, y=y, seed=None, funct=func, max_iter=10)
+    evolution = EvolutionStrategy(mi=1, lamb=1, x=x, y=y, seed=None, funct=func, max_iter=50, param=False)
     result_point = evolution.evolve()
     display_3d_function(x, y, func, result_point)
 
