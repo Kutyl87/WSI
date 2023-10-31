@@ -5,13 +5,12 @@ import matplotlib.pyplot as plt
 import datetime
 import os
 from typing import Callable
-from math import floor
-
 
 class EvolutionStrategy:
     def __init__(self, x, y, funct, mi, lamb, max_iter, param, seed=None):
         """
         Initializes an EvolutionStrategy object with specified parameters.
+
         Args:
             x - list of x values
             y - list of y values
@@ -36,6 +35,7 @@ class EvolutionStrategy:
     def fitness(self, population):
         """
         Calculates the fitness of a population by applying the objective function to x and y values in the population.
+
         Args:
             population - a population where each individual is described as a pair (x, y)
         Returns:
@@ -64,30 +64,30 @@ class EvolutionStrategy:
         self._logger.info(f"Starting points: ({starting_points})")
         return starting_points
 
-    def extend_population(self, parents):
-        """
-        Extends the population by repeating parents.
-        Args:
-            parents - parent population
-        Returns:
-            Extended population
-        """
-        return np.repeat(parents, self._lamb, axis=0)
+    # def extend_population(self, parents):
+    #     """
+    #     Extends the population by repeating parents.
+    #     Args:
+    #         parents - parent population
+    #     Returns:
+    #         Extended population
+    #     """
+    #     return np.repeat(parents, self._lamb, axis=0)
 
     def crossover(self, parents):
         """
         Performs crossover operation (not fully implemented).
+
         Args:
             parents - parent population
         Returns:
             Offspring population
         """
-        a = np.repeat(np.random.normal(0, 1, size=(floor(self._mi / 2) * self._lamb, 1)), 2, axis=1)
-        parents_extended = self.extend_population(parents)
+        a = np.repeat(np.random.normal(0, 1, size=(self._lamb, 1)), 2, axis=1)
+        parents_extended = parents
         return parents_extended[:, 0, :] * a + parents_extended[:, 1, :] * (1 - a)
 
-    @staticmethod
-    def selection(population, probabilities):
+    def selection(self, population, probabilities):
         """
         Performs selection of individuals from the population based on their probabilities.
         Args:
@@ -97,12 +97,13 @@ class EvolutionStrategy:
             Selected individuals
         """
         return population[
-            np.random.choice(population.shape[0], replace=False, p=probabilities,
-                             size=(floor(len(population) / 2), 2))]
+            np.random.choice(population.shape[0], p=probabilities,
+                             size=(self._lamb, 2))]
 
     def mutate(self, generation):
         """
         Applies mutation to a generation of individuals.
+
         Args:
             generation - population to mutate
         Returns:
@@ -110,12 +111,13 @@ class EvolutionStrategy:
         """
         mut_prob = 0.1
         mutated_individuals = np.repeat(np.random.random(size=(generation.shape[0], 1)), 2, axis=1)
-        gaussian_noise = np.random.normal(0, 1, size=(floor(self._mi / 2) * self._lamb, 2))
+        gaussian_noise = np.random.normal(0, 1, size=(self._lamb, 2))
         return generation + (mutated_individuals < mut_prob) * gaussian_noise
 
     def get_new_population(self, whole_population, whole_population_rate):
         """
         Selects the top individuals from a combined population.
+
         Args:
             whole_population - combined population
             whole_population_rate - fitness values of the combined population
@@ -130,6 +132,7 @@ class EvolutionStrategy:
     def evolve(self):
         """
         Main evolution loop of the algorithm.
+
         Returns:
             The best individual found by the algorithm
         """
@@ -201,7 +204,7 @@ def main():
     x = np.arange(-7, 7, 0.01)
     y = np.arange(-7, 7, 0.01)
     set_logging("report")
-    evolution = EvolutionStrategy(mi=1, lamb=1, x=x, y=y, seed=None, funct=func, max_iter=50, param=False)
+    evolution = EvolutionStrategy(mi=16, lamb=128, x=x, y=y, seed=None, funct=func, max_iter=50, param=False)
     result_point = evolution.evolve()
     display_3d_function(x, y, func, result_point)
 
