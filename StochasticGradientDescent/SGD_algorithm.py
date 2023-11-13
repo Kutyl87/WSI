@@ -120,9 +120,9 @@ def display_3d_function(x: np.array, y: np.array, function: Callable, result_poi
     x_arr, y_arr = np.meshgrid(x, y)
     z_arr = function(x_arr, y_arr)
     ax = plt.subplot(projection="3d", computed_zorder=False)
-    ax.plot_surface(x_arr, y_arr, z_arr, cmap="viridis", zorder=0)
+    ax.plot_surface(x_arr, y_arr, z_arr, cmap="cool", zorder=0)
     if result_point is not None:
-        ax.scatter(result_point[0], result_point[1], func(result_point[0], result_point[1]), color="black", zorder=1)
+        ax.scatter(result_point[0], result_point[1], func(result_point[0], result_point[1]), color="red", zorder=1)
     plt.show()
 
 
