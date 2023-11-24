@@ -31,6 +31,7 @@ class TestMinMaxAgent(unittest.TestCase):
         vector = [4, -9, 1, -8, -2, 8, -7, -4, 0, -1, 7, -5, 5, -3, -10, 3, 2, 6, -6, 9]
         first_agent, second_agent = MinMaxAgent(), MinMaxAgent()
         run_game(vector, first_agent, second_agent)
+        print(first_agent.numbers)
         assert sum(first_agent.numbers) == -1
 
     def test_5(self):
